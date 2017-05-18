@@ -20,7 +20,7 @@
 
     if (typeof module !== "undefined" && module.exports) {
         exports = module.exports = {};
-        esprima = require("./external/esprima.js");
+        esprima = require("./node_modules/esprima/esprima.js");
         _ = require("underscore");
     } else {
         exports = this.Structured = {};
@@ -59,86 +59,86 @@
      * return true if n2 < n1 (according to relatively arbitrary criteria)
      */
     function shouldSwap(n1, n2) {
-	if (n1.type < n2.type) { //Sort by node type if different
-	    return false;
-	} else if (n1.type > n2.type) {
-	    return true;
-	} else if (n1.type === "Literal") { //Sort by value if they're literals
-	    return n1.raw > n2.raw;
-	} else { //Otherwise, loop through the properties until a difference is found and sort by that
-	    for (var k in n1) {
-		if (n1[k].hasOwnProperty("type") && n1[k] !== n2[k]) {
-		    return shouldSwap(n1[k], n2[k]);
-		}
-	    }
-	}
+    if (n1.type < n2.type) { //Sort by node type if different
+        return false;
+    } else if (n1.type > n2.type) {
+        return true;
+    } else if (n1.type === "Literal") { //Sort by value if they're literals
+        return n1.raw > n2.raw;
+    } else { //Otherwise, loop through the properties until a difference is found and sort by that
+        for (var k in n1) {
+        if (n1[k].hasOwnProperty("type") && n1[k] !== n2[k]) {
+            return shouldSwap(n1[k], n2[k]);
+        }
+        }
+    }
     }
     function standardizeTree(tree) {
-	if (!tree) {return tree;}
+    if (!tree) {return tree;}
         var r = deepClone(tree);
         switch (tree.type) {
             case "BinaryExpression":
                 if (_.contains(["*", "+", "===", "!==", "==", "!=", "&", "|", "^"], tree.operator)) {
-		    if (shouldSwap(tree.left, tree.right)) {
-			r.left = standardizeTree(tree.right);
-			r.right = standardizeTree(tree.left);
+            if (shouldSwap(tree.left, tree.right)) {
+            r.left = standardizeTree(tree.right);
+            r.right = standardizeTree(tree.left);
             } else {
                 r.left = standardizeTree(tree.left);
                 r.right = standardizeTree(tree.right);
             }
-		} else if (tree.operator[0] === ">") {
-		    r.operator = "<" + tree.operator.slice(1);
-		    r.left = standardizeTree(tree.right);
-		    r.right = standardizeTree(tree.left);
-		} break;
-	    case "LogicalExpression":
-	        if (_.contains(["&&", "||"], tree.operator) &&
-		    shouldSwap(tree.left, tree.right)) {
-		    r.left = standardizeTree(tree.right);
-		    r.right = standardizeTree(tree.left);
-		} break;
-	    case "AssignmentExpression":
-	        if (_.contains(["+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "^=", "|="], tree.operator)) {
-		    var l = standardizeTree(tree.left);
-		    r = {type: "AssignmentExpression",
-			 operator: "=",
-			 left: l,
-			 right: {type: "BinaryExpression",
-				 operator: tree.operator.slice(0,-1),
-				 left: l,
-				 right: standardizeTree(tree.right)}};
-		} else {
+        } else if (tree.operator[0] === ">") {
+            r.operator = "<" + tree.operator.slice(1);
+            r.left = standardizeTree(tree.right);
+            r.right = standardizeTree(tree.left);
+        } break;
+        case "LogicalExpression":
+            if (_.contains(["&&", "||"], tree.operator) &&
+            shouldSwap(tree.left, tree.right)) {
+            r.left = standardizeTree(tree.right);
+            r.right = standardizeTree(tree.left);
+        } break;
+        case "AssignmentExpression":
+            if (_.contains(["+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "^=", "|="], tree.operator)) {
+            var l = standardizeTree(tree.left);
+            r = {type: "AssignmentExpression",
+             operator: "=",
+             left: l,
+             right: {type: "BinaryExpression",
+                 operator: tree.operator.slice(0,-1),
+                 left: l,
+                 right: standardizeTree(tree.right)}};
+        } else {
             r.left = standardizeTree(r.left);
             r.right = standardizeTree(r.right);
         } break;
-	    case "UpdateExpression":
-	        if (_.contains(["++", "--"], tree.operator)) {
-		    var l = standardizeTree(tree.argument);
-		    r = {type: "AssignmentExpression",
-			 operator: "=",
-			 left: l,
-			 right: {type: "BinaryExpression",
-				 operator: tree.operator[0],
-				 left: l,
-				 right: {type: "Literal",
-					 value: 1,
-					 raw: "1"}}};
-		} break;
-	    case "VariableDeclaration":
-	        if (tree.kind === "var") {
-		    r = [deepClone(tree)];
-		    for (var i in tree.declarations) {
-			if (tree.declarations[i].type === "VariableDeclarator" &&
-			    tree.declarations[i].init !== null) {
-			    r.push({type: "ExpressionStatement",
-				    expression: {type: "AssignmentExpression",
-						 operator: "=",
-						 left: tree.declarations[i].id,
-						 right: standardizeTree(tree.declarations[i].init)}});
-			    r[0].declarations[i].init = null;
-			}
-		    }
-		} break;
+        case "UpdateExpression":
+            if (_.contains(["++", "--"], tree.operator)) {
+            var l = standardizeTree(tree.argument);
+            r = {type: "AssignmentExpression",
+             operator: "=",
+             left: l,
+             right: {type: "BinaryExpression",
+                 operator: tree.operator[0],
+                 left: l,
+                 right: {type: "Literal",
+                     value: 1,
+                     raw: "1"}}};
+        } break;
+        case "VariableDeclaration":
+            if (tree.kind === "var") {
+            r = [deepClone(tree)];
+            for (var i in tree.declarations) {
+            if (tree.declarations[i].type === "VariableDeclarator" &&
+                tree.declarations[i].init !== null) {
+                r.push({type: "ExpressionStatement",
+                    expression: {type: "AssignmentExpression",
+                         operator: "=",
+                         left: tree.declarations[i].id,
+                         right: standardizeTree(tree.declarations[i].init)}});
+                r[0].declarations[i].init = null;
+            }
+            }
+        } break;
         case "Literal":
             r.raw = tree.raw
                 .replace(/^(?:\"(.*?)\"|\'(.*?)\')$/, function(match, p1, p2) {
@@ -146,21 +146,21 @@
                         .replace(/"|'/g, "\"") + "\"";
                 });
             console.log(r.raw); break;
-	    default:
-	        for (var key in tree) {
-		    if (!tree.hasOwnProperty(key) || !_.isObject(tree[key])) {
-			continue;
-		    }
-		    if (_.isArray(tree[key])) {
-			var ar = [];
-			for (var i in tree[key]) {  /* jshint forin:false */
-			    ar = ar.concat(standardizeTree(tree[key][i]));
-			}
-			r[key] = ar;
-		    } else {
-			r[key] = standardizeTree(tree[key]);
-		    }
-		}
+        default:
+            for (var key in tree) {
+            if (!tree.hasOwnProperty(key) || !_.isObject(tree[key])) {
+            continue;
+            }
+            if (_.isArray(tree[key])) {
+            var ar = [];
+            for (var i in tree[key]) {  /* jshint forin:false */
+                ar = ar.concat(standardizeTree(tree[key][i]));
+            }
+            r[key] = ar;
+            } else {
+            r[key] = standardizeTree(tree[key]);
+            }
+        }
         }
         return r;
     }
@@ -274,7 +274,7 @@
             _: [],
             vars: {}
         };
-	codeTree = standardizeTree(codeTree);
+    codeTree = standardizeTree(codeTree);
         if (wildcardVars.order.length === 0 || options.single) {
             // With no vars to match, our normal greedy approach works great.
             result = checkMatchTree(codeTree, toFind, peers, wildcardVars, matchResult, options);

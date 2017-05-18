@@ -234,6 +234,69 @@ var basicTests = function() {
             false,
             "[,] doesn't match regular array");
     });
+
+    test("Accepts ES6 syntax", function() {
+        var structure, code;
+
+        ok(Structured.match("let x = 2;",
+                function() {
+                    let x = 2;
+                }),
+            "Supports let keyword.");
+
+        ok(Structured.match("const x = 2;",
+                function() {
+                    const x = 2;
+                }),
+            "Supports const keyword.");
+
+        ok(Structured.match("(param1, param2) => { console.log(param1 + param2); };",
+                function() {
+                    (param1, param2) => {
+                        console.log(param1 + param2)
+                    };
+                }),
+            "Supports arrow functions.");
+
+        ok(Structured.match("var x = function (param1 = 2, param2) { }",
+                'function() { var x = function (param1 = 2, param2) { } }'),
+            "Supports default parameters.");
+
+        ok(Structured.match("`Interpolate ${variable}`;",
+                function() {
+                    `Interpolate ${variable}`;
+                }),
+            "Supports template literals.");
+
+        ok(Structured.match("var object = { method() {} };",
+                function() {
+                    var object = {
+                        method () {
+
+                        }
+                    };
+                }),
+            "Supports method shorthand.");
+
+        ok(Structured.match("class ClassName { constructor() {} method() {}}",
+                function() {
+                    class ClassName {
+                        constructor() {
+
+                        } method() {
+
+                        }
+                    }
+                }),
+            "Supports class syntax.");
+
+        ok(Structured.match("var p = new Promise((resolve, reject) => {});",
+                function() {
+                    var p = new Promise((resolve, reject) => {});
+                }),
+            "Supports promises.");
+
+    });
 };
 
 var clutterTests = function() {
@@ -1210,7 +1273,8 @@ var structureMatchTests = function() {
                     "test": {
                         "raw": "true",
                         "type": "Literal",
-                        "value": true
+                        "value": true,
+                        "$ref": '$["actual"]["vars"]["condition"]'
                     },
                     "consequent": {
                         "type": "BlockStatement",
@@ -1224,7 +1288,8 @@ var structureMatchTests = function() {
                                 },
                                 "init": null
                             }],
-                            "kind": "var"
+                            "kind": "var",
+                            "$ref": '$["actual"]["vars"]["expressions"][0]'
                         }, {
                             "expression":  {
                               "left": {
@@ -1239,7 +1304,8 @@ var structureMatchTests = function() {
                               },
                               "type": "AssignmentExpression"
                             },
-                            "type": "ExpressionStatement"
+                            "type": "ExpressionStatement",
+                            "$ref": '$["actual"]["vars"]["expressions"][1]'
                           }, {
                             "type": "ExpressionStatement",
                             "expression": {
@@ -1249,7 +1315,8 @@ var structureMatchTests = function() {
                                     "name": "test"
                                 },
                                 "arguments": []
-                            }
+                            },
+                            "$ref": '$["actual"]["vars"]["expressions"][2]'
                         }]
                     },
                     "alternate": null
@@ -1499,7 +1566,8 @@ var structureMatchTests = function() {
                     "type": "VariableDeclarator",
                     "id": {
                         "type": "Identifier",
-                        "name": "a"
+                        "name": "a",
+                        "$ref": '$["actual"]["_"][0]'
                     },
                     "init": null
                 }],
