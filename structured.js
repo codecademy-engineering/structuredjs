@@ -20,7 +20,7 @@
 
     if (typeof module !== "undefined" && module.exports) {
         exports = module.exports = {};
-        esprima = require("./external/esprima.js");
+        esprima = require("esprima");
         _ = require("underscore");
     } else {
         exports = this.Structured = {};
