@@ -29,7 +29,7 @@
     }
 
     if (!esprima || !_) {
-        throw "Error: Both Esprima and UnderscoreJS are required dependencies.";
+        throw new Error("Error: Both Esprima and UnderscoreJS are required dependencies.");
     }
 
     /*
@@ -257,7 +257,7 @@
             cachedCodeTree :
             typeof code === "object" ?
             deepClone(code) :
-            esprima.parse(code));
+            esprima.parse(code, { jsx: true }));
 
         cachedCode = code;
         cachedCodeTree = codeTree;
@@ -440,11 +440,11 @@
         }
 
         // Wrapped in parentheses so function() {} becomes valid Javascript.
-        var fullTree = esprima.parse("(" + structure + ")");
+        var fullTree = esprima.parse("(" + structure + ")", { jsx: true });
 
-        if (fullTree.body[0].expression.type !== "FunctionExpression" ||
+        if ((fullTree.body[0].expression.type !== "FunctionExpression" && fullTree.body[0].expression.type !== "ArrowFunctionExpression") ||
             !fullTree.body[0].expression.body) {
-            throw "Poorly formatted structure code";
+            throw new Error("Poorly formatted structure code");
         }
 
         var tree = fullTree.body[0].expression.body;
@@ -965,7 +965,7 @@
 
         if (node.name === "_") {
             if (!data._ || data._.length === 0) {
-                throw "No _ data available.";
+                throw new Error("No _ data available.");
             }
 
             return data._.shift();
@@ -973,7 +973,7 @@
             var name = node.name.slice(1);
 
             if (!data.vars || !(name in data.vars)) {
-                throw "No vars available.";
+                throw new Error("No vars available.");
             }
 
             return data.vars[name];
@@ -989,7 +989,7 @@
 
         if (check.name === "glob_") {
             if (!data._ || data._.length === 0) {
-                throw "No _ data available.";
+                throw new Error("No _ data available.");
             }
 
             return data._.shift();
@@ -997,7 +997,7 @@
             var name = check.name.slice(5);
 
             if (!data.vars || !(name in data.vars)) {
-                throw "No vars available.";
+                throw new Error("No vars available.");
             }
 
             return data.vars[name];
